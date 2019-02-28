@@ -44,7 +44,7 @@ static JNativeInfoType this_module_native_info = {
   .free_cb = (jerry_object_native_free_callback_t)iotjs_tts_destroy
 };
 
-static void iotjs_tts_async_onclose(uv_async_t* handle) {
+static void iotjs_tts_async_onclose(uv_handle_t* handle) {
   iotjs_tts_t* ttswrap = (iotjs_tts_t*)handle->data;
   IOTJS_VALIDATED_STRUCT_METHOD(iotjs_tts_t, ttswrap);
   jerry_value_t jval = iotjs_jobjectwrap_jobject(&_this->jobjectwrap);
