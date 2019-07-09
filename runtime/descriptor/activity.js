@@ -10,11 +10,11 @@ var Descriptor = require('../lib/descriptor')
  * @memberof yodaRT.activity
  * @classdesc The `Activity` is the APIs for apps developer.
  * ```js
- * module.exports = activity => {
- *   activity.on('create', () => {
+ * module.exports = api => {
+ *   api.on('create', () => {
  *     console.log('app is created')
  *   })
- *   activity.on('destroy', () => {
+ *   api.on('destroy', () => {
  *     console.log('app is destroyed')
  *   })
  * }
@@ -29,8 +29,7 @@ class ActivityDescriptor extends Descriptor {
 
   exit (ctx) {
     var appId = ctx.appId
-    var options = ctx.args[0]
-    return this.runtime.exitAppById(appId, Object.assign({}, options, { ignoreKeptAlive: true }))
+    return this.component.appScheduler.suspendApp(appId)
   }
 
   openUrl (ctx) {
@@ -40,14 +39,6 @@ class ActivityDescriptor extends Descriptor {
       options = { form: options }
     }
     return this.runtime.openUrl(url, options)
-  }
-
-  startMonologue (ctx) {
-    return this.runtime.startMonologue(ctx.appId)
-  }
-
-  stopMonologue (ctx) {
-    return this.runtime.stopMonologue(ctx.appId)
   }
 }
 
@@ -75,16 +66,6 @@ ActivityDescriptor.events = {
    */
   created: {},
   /**
-   * When an activity is about been paused.
-   * @event yodaRT.activity.Activity#paused
-   */
-  paused: {},
-  /**
-   * When an activity is resumed.
-   * @event yodaRT.activity.Activity#resumed
-   */
-  resumed: {},
-  /**
    * When an activity is about been destroyed.
    * @event yodaRT.activity.Activity#destroyed
    */
@@ -103,26 +84,15 @@ ActivityDescriptor.events = {
    * @event yodaRT.activity.Activity#url
    * @param {module:url~UrlWithParsedQuery} url
    */
-  url: {},
-  /**
-   * Fires on oppressing of other apps in monologue mode.
-   *
-   * > Only fires to apps in monologue mode.
-   *
-   * @event yodaRT.activity.Activity#oppressing
-   * @param {string} event - the event of oppressed app which would had
-   * activated the app if not in monologue mode.
-   */
-  oppressing: {}
+  url: {}
 }
 ActivityDescriptor.methods = {
   /**
-   * Exits the current application.
+   * Exits the current application and marks the app could not handle subsequent
+   * events until a fresh restart.
    * @memberof yodaRT.activity.Activity
    * @instance
    * @function exit
-   * @param {object} [options] -
-   * @param {boolean} [options.clearContext] - also clears contexts
    * @returns {Promise<void>}
    */
   exit: {
@@ -142,59 +112,6 @@ ActivityDescriptor.methods = {
    * @returns {Promise<boolean>}
    */
   openUrl: {
-    returns: 'promise'
-  },
-  /**
-   * Set context options to current context.
-   *
-   * Options would be merged to current options so that it's not required
-   *  to provide a full set of options each time.
-   *
-   * @memberof yodaRT.activity.Activity
-   * @instance
-   * @function setContextOptions
-   * @param {object} options - context options to be set.
-   * @returns {Promise<object>}
-   */
-  setContextOptions: {
-    returns: 'promise'
-  },
-  /**
-   * Get current context options previously set.
-   *
-   * @memberof yodaRT.activity.Activity
-   * @instance
-   * @function getContextOptions
-   * @returns {Promise<object>}
-   */
-  getContextOptions: {
-    returns: 'promise'
-  },
-  /**
-   * Start a session of monologue. In session of monologue, no other apps could preempt top of stack.
-   *
-   * It requires the permission `ACCESS_MONOPOLIZATION`.
-   *
-   * @memberof yodaRT.activity.Activity
-   * @instance
-   * @function startMonologue
-   * @returns {Promise<void>}
-   */
-  startMonologue: {
-    returns: 'promise',
-    permissions: ['ACCESS_MONOPOLIZATION']
-  },
-  /**
-   * Stop a session of monologue started previously.
-   *
-   * It requires the permission `ACCESS_MONOPOLIZATION`.
-   *
-   * @memberof yodaRT.activity.Activity
-   * @instance
-   * @function stopMonologue
-   * @returns {Promise<void>}
-   */
-  stopMonologue: {
     returns: 'promise'
   }
 }
